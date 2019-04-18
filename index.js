@@ -21,6 +21,7 @@ if (Platform.OS === 'ios') {
 const functions = [
     'setFromResponse',
     'getFromResponse',
+    'getAllAsArray',
     'clearByName'
 ];
 

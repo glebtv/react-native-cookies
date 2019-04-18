@@ -205,6 +205,28 @@ RCT_EXPORT_METHOD(
     }
 }
 
+RCT_EXPORT_METHOD(
+  getAllAsArray:(BOOL)useWebKit
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    if (useWebKit) {
+        if (@available(iOS 11.0, *)) {
+            dispatch_async(dispatch_get_main_queue(), ^(){
+                WKHTTPCookieStore *cookieStore = [[WKWebsiteDataStore defaultDataStore] httpCookieStore];
+                [cookieStore getAllCookies:^(NSArray<NSHTTPCookie *> *allCookies) {
+                    resolve([self createCookieArray: allCookies]);
+                }];
+            });
+        } else {
+            reject(@"", NOT_AVAILABLE_ERROR_MESSAGE, nil);
+        }
+    } else {
+        NSHTTPCookieStorage *cookieStorage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
+        resolve([self createCookieArray:cookieStorage.cookies]);
+    }
+}
+
 
 -(NSDictionary *)createCookieList:(NSArray<NSHTTPCookie *>*)cookies
 {
@@ -215,6 +237,17 @@ RCT_EXPORT_METHOD(
     }
     return cookieList;
 }
+
+
+-(NSArray *)createCookieArray:(NSArray<NSHTTPCookie *>*)cookies
+{
+    NSMutableArray *cookieList = [[NSMutableArray alloc] init];
+    for (NSHTTPCookie *cookie in cookies) {
+        [cookieList addObject:[self createCookieData:cookie]];
+    }
+    return cookieList;
+}
+
 
 -(NSDictionary *)createCookieData:(NSHTTPCookie *)cookie
 {
